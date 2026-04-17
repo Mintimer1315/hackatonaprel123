@@ -155,6 +155,7 @@ else:
 
 
 #топ
+    #топ
     with t4:
         st.subheader("🎯 Личный статус")
         
@@ -196,7 +197,7 @@ else:
             
             lb1 = []
             for member in members:
-                #считаем_страницы_каждого
+                #счет
                 p = sum(b['pages'] for b in st.session_state['book'] if b['user'] == member)
                 lb1.append({"name": member, "pages": p})
             
@@ -223,17 +224,26 @@ else:
                     c2.caption(league)
                     c3.write(f"**{pages} стр.**")
                     
-                    
                     if place > 1 and name == st.session_state['user']:
                         target = lb1[i-1]['pages']
                         diff = target - pages + 1
                         st.info(f"До #{place-1} места осталось прочитать {diff} стр.!")
 
+                    #полка
+                    with st.expander("посмотреть полку"):
+                        u_books = [b for b in st.session_state['book'] if b['user'] == name]
+                        if u_books:
+                            for ub in u_books:
+                                st.write(f"📖 {ub['title']} — {ub['pages']} стр.")
+                                if ub.get('rev'):
+                                    st.caption(f"💬 {ub['rev']}")
+                        else:
+                            st.write("полка пуста")
+
         
         st.divider()
         st.divider()
         st.subheader("📊ГЛОБАЛЬНЫЙ топ")
-        
         
         lb = {}
         for b in st.session_state['book']:
@@ -246,9 +256,3 @@ else:
         for i, (name, p) in enumerate(sorted_top):
             place = "🥇" if i==0 else "🥈" if i==1 else "🥉" if i==2 else "📖"
             st.write(f"{place} {name}: {p} стр.")
-
-        
-
-        
-      
-
