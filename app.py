@@ -14,8 +14,8 @@ def load_data():
                 if not content: return {"Общий челлендж РТ": ["Алексей"]}
                 return json.loads(content)
         except:
-            return {"Общий челлендж РТ": ["Алексей"]}
-    return {"Общий челлендж РТ": ["Алексей"]}
+            return {"первый челлендж": ["я"]}
+    return {"первый челлендж": ["я"]}
 
 #сейв
 def save_data(data):
