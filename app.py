@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import json
+import time
 
 DB_FILE = "competitions.json"
 BOOKS_FILE = "books.json"
@@ -11,11 +12,11 @@ def load_data():
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
                 content = f.read()
-                if not content: return {"Общий челлендж РТ": ["Алексей"]}
+                if not content: return {"Первый тест": ["Алексей"]}
                 return json.loads(content)
         except:
-            return {"первый челлендж": ["я"]}
-    return {"первый челлендж": ["я"]}
+            return {"Первый тест": ["Алексей"]}
+    return {"Первый тест": ["Алексей"]}
 
 #сейв
 def save_data(data):
@@ -51,7 +52,7 @@ if 'user' not in st.session_state:
 
 #вход
 if not st.session_state['auth']:
-    st.title("📚 Reading Challenge")
+    st.title("ReadBook")
     st.subheader("Регистрация участника")
     
     u_name = st.text_input("Как тебя зовут?")
@@ -65,7 +66,7 @@ if not st.session_state['auth']:
 
 else:
 #сайдбар
-    st.sidebar.write(f"👤 Игрок: **{st.session_state['user']}**")
+    st.sidebar.write(f"Участник: **{st.session_state['user']}**")
     
     my_books = [b for b in st.session_state['book'] if b['user'] == st.session_state['user']]
     total_pages = sum(b['pages'] for b in my_books)
@@ -80,7 +81,7 @@ else:
 
 #главная
     with t1:
-        st.write(f"Привет, {st.session_state['user']}! Добавляй прочитанное сюда.")
+        st.write(f"Привет, {st.session_state['user']}! Добавляй прочитанное сюда")
         
         with st.container(border=True):
             nb = st.text_input("Название книги и автор")
@@ -92,15 +93,14 @@ else:
                     new_book = {"user": st.session_state['user'], "title": nb, "pages": ps, "rev": ot}
                     st.session_state['book'].append(new_book)
                     save_books(st.session_state['book']) 
-                    
-                    st.success(f"Книга добавлена!")
-                    st.balloons()
+                    st.toast(f"Книга добавлена!", icon="📖")
+                    time.sleep(1)
                     st.rerun()
                 else:
                     st.error("Надо заполнить название и количество страниц")
 
         if my_books:
-            st.subheader("Твоя полка:")
+            st.subheader("Твои прочитаные книги:")
             for b in my_books:
                 st.write(f"📖 **{b['title']}** — {b['pages']} стр.")
                 if b['rev']:
@@ -109,37 +109,50 @@ else:
 #создание
     with t2:
         st.subheader("Создать новое соревнование")
-        newch = st.text_input("Название (например: Битва 5А класса)")
+        newch = st.text_input("Название (например: Битва ли24)")
         if st.button("Опубликовать"):
             if newch:
 #проверка
                 if newch not in st.session_state.challenges:
                     st.session_state.challenges[newch] = [st.session_state.user]
                     save_data(st.session_state.challenges)
-                    st.success(f"Челлендж '{newch}' создан!")
-                    st.rerun()
+                    
+                    st.toast(f"Соревнование '{newch}' создано!",icon = "🔥")  
+                    time.sleep(1)        
+                    st.rerun()         
                 else:
-                  st.error("Такое название уже есть!")
+                  st.error("Такое название уже есть")
             else:
-                st.error("Введи название!")
+                st.error("Введи название")
 
 #список
     with t3:
-        st.subheader("Доступные соревнования")
-        for name, members in st.session_state['challenges'].items():
-            with st.container(border=True):
-                col1, col2 = st.columns([3, 1])
-                col1.write(f"**{name}**")
-                col1.caption(f"Участники: {', '.join(members)}")
-                
-                if col2.button(f"Вступить", key=name):
-                    if st.session_state.user not in members:
-                        st.session_state.challenges[name].append(st.session_state.user)
-                        save_data(st.session_state.challenges)
-                        st.success("Ты в деле!")
-                        st.rerun()
-                    else:
-                        st.warning("Ты уже там!")
+      st.subheader("🏆 доступные соревнования")
+        
+        #поле_поиска
+      sr = st.text_input("🔍 найти челлендж", "", placeholder="введи название...")
+        
+      found = False
+      for name, members in st.session_state['challenges'].items():
+            #пров
+            if sr.lower() in name.lower():
+                found = True
+                with st.container(border=True):
+                    col1, col2 = st.columns([3, 1])
+                    col1.write(f"**{name}**")
+                    col1.caption(f"участники: {', '.join(members)}")
+                    
+                    if col2.button(f"вступить", key=f"join_{name}"):
+                        if st.session_state.user not in members:
+                            st.session_state.challenges[name].append(st.session_state.user)
+                            save_data(st.session_state.challenges)
+                            st.toast("ты в соревновании", icon="🔥")
+                            time.sleep(1)
+                            st.rerun()
+                        else:
+                            st.warning("ты уже там")
+        
+
 
 #топ
     with t4:
@@ -169,9 +182,9 @@ else:
             #шкала
             bar = min(total_pages / 500.0, 1.0)
             st.progress(bar)
-            st.caption(f"прогресс до сокола: {int(bar*100)}%")
+            st.caption(f"прогресс до орла: {int(bar*100)}%")
         
-        st.subheader("Рейтинг участников")
+        st.subheader("Рейтинг участников соревнования")
         
         my_ch = [n for n, m in st.session_state.challenges.items() if st.session_state.user in m]
         
@@ -181,16 +194,16 @@ else:
             selected_ch = st.selectbox("Выбери соревнование для просмотра топа:", my_ch)
             members = st.session_state.challenges[selected_ch]
             
-            leaderboard = []
+            lb1 = []
             for member in members:
                 #считаем_страницы_каждого
                 p = sum(b['pages'] for b in st.session_state['book'] if b['user'] == member)
-                leaderboard.append({"name": member, "pages": p})
+                lb1.append({"name": member, "pages": p})
             
             #сорт
-            leaderboard = sorted(leaderboard, key=lambda x: x['pages'], reverse=True)
+            lb1 = sorted(lb1, key=lambda x: x['pages'], reverse=True)
             
-            for i, user in enumerate(leaderboard):
+            for i, user in enumerate(lb1):
                 place = i + 1
                 name = user['name']
                 pages = user['pages']
@@ -204,7 +217,7 @@ else:
                     c1, c2, c3 = st.columns([1, 3, 2])
                     c1.write(f"#{place}")
                     if name == st.session_state['user']:
-                        c2.write(f"**{name} (ТЫ)**")
+                        c2.info(f"**{name} (ТЫ)**")
                     else:
                         c2.write(name)
                     c2.caption(league)
@@ -212,9 +225,29 @@ else:
                     
                     
                     if place > 1 and name == st.session_state['user']:
-                        target = leaderboard[i-1]['pages']
+                        target = lb1[i-1]['pages']
                         diff = target - pages + 1
                         st.info(f"До #{place-1} места осталось прочитать {diff} стр.!")
+
+        
+        st.divider()
+        st.divider()
+        st.subheader("📊ГЛОБАЛЬНЫЙ топ")
+        
+        
+        lb = {}
+        for b in st.session_state['book']:
+            u = b['user']
+            lb[u] = lb.get(u, 0) + b['pages']
+        
+        #сорт
+        sorted_top = sorted(lb.items(), key=lambda x: x[1], reverse=True)
+        
+        for i, (name, p) in enumerate(sorted_top):
+            place = "🥇" if i==0 else "🥈" if i==1 else "🥉" if i==2 else "📖"
+            st.write(f"{place} {name}: {p} стр.")
+
+        
 
         
       
